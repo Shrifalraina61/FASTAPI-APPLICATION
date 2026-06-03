@@ -2,11 +2,39 @@
 
 ## Overview
 
-This project demonstrates how a simple FastAPI application can be deployed in a production-like environment using Docker, Docker Compose, PostgreSQL, Redis, NGINX, GitHub Actions, and AWS EC2.
+This project demonstrates how a FastAPI application can be deployed in a production-like environment using modern DevOps practices.
 
-The goal of this project was not just to run a FastAPI application, but to implement the complete deployment lifecycle that is commonly used in real-world backend and DevOps environments.
+The application is containerized using Docker, orchestrated with Docker Compose, deployed on an AWS EC2 Ubuntu server, secured using NGINX as a reverse proxy, and automated using GitHub Actions CI/CD.
 
-The application was containerized using Docker, deployed on an Ubuntu EC2 instance, placed behind an NGINX reverse proxy, and integrated with GitHub Actions for automated deployments.
+The goal of this project was to gain hands-on experience with real-world application deployment, infrastructure management, containerization, automation, security, and operational best practices.
+
+---
+
+# Live Deployment
+
+### Application URL
+
+http://32.192.185.7/
+
+### Health Check Endpoint
+
+http://32.192.185.7/health
+
+Example Response:
+
+```json
+{
+  "message": "Working"
+}
+```
+
+Health Check Response:
+
+```json
+{
+  "status": "healthy"
+}
+```
 
 ---
 
@@ -16,59 +44,62 @@ The application was containerized using Docker, deployed on an Ubuntu EC2 instan
 Internet
     |
     v
-NGINX
+NGINX Reverse Proxy
     |
     v
-FastAPI Application
+FastAPI Application Container
     |
-    +----------------+
-    |                |
-    v                v
-PostgreSQL        Redis
+    +------------------+
+    |                  |
+    v                  v
+PostgreSQL         Redis
+Container          Container
 
 
-GitHub
-   |
-GitHub Actions
-   |
-EC2 Server
+GitHub Repository
+        |
+        v
+GitHub Actions CI/CD
+        |
+        v
+AWS EC2 Ubuntu Server
 ```
 
 ---
 
 # Technologies Used
 
-### Backend
+## Backend
 
 * FastAPI
 * Uvicorn
 
-### Database
+## Database
 
 * PostgreSQL 16
 
-### Cache Service
+## Cache Layer
 
 * Redis 7
 
-### Containerization
+## Containerization
 
 * Docker
 * Docker Compose
 
-### Web Server
+## Reverse Proxy
 
 * NGINX
 
-### Cloud Platform
+## Cloud Platform
 
 * AWS EC2 (Ubuntu)
 
-### CI/CD
+## CI/CD
 
 * GitHub Actions
 
-### Security
+## Security
 
 * UFW Firewall
 * Fail2Ban
@@ -88,18 +119,20 @@ fastapi-production/
 ├── docker-compose.yml
 ├── .env
 │
-└── .github/
-    └── workflows/
-        └── deploy.yml
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+│
+└── README.md
 ```
 
 ---
 
 # Application Features
 
-The FastAPI application provides two endpoints.
+The FastAPI application exposes two endpoints.
 
-### Root Endpoint
+## Root Endpoint
 
 ```http
 GET /
@@ -113,7 +146,7 @@ Response:
 }
 ```
 
-### Health Endpoint
+## Health Check Endpoint
 
 ```http
 GET /health
@@ -127,55 +160,61 @@ Response:
 }
 ```
 
-The health endpoint was added to quickly verify that the application is running correctly and can also be used by monitoring systems.
+The health endpoint helps verify that the application is running correctly and can be integrated with monitoring systems.
 
 ---
 
-# Containerization
+# Dockerization
 
 The application was containerized using Docker.
 
-I created a Dockerfile that:
+A Dockerfile was created to:
 
-* Uses Python 3.11 Slim image
-* Installs project dependencies
-* Copies application code
-* Starts FastAPI using Uvicorn
+* Use Python 3.11 as the base image
+* Install application dependencies
+* Copy source code
+* Run the FastAPI application using Uvicorn
 
-Benefits of Docker:
+### Benefits of Docker
 
 * Consistent environments
 * Easy deployment
 * Portability across systems
 * Simplified dependency management
+* Isolation between services
 
 ---
 
 # Docker Compose Setup
 
-Docker Compose was used to manage multiple services together.
+Docker Compose is used to manage multiple containers together.
 
-The setup includes:
+The project consists of three services:
 
-### FastAPI Container
+## FastAPI Container
 
 Runs the backend application.
 
-### PostgreSQL Container
+## PostgreSQL Container
 
 Stores application data.
 
-### Redis Container
+## Redis Container
 
-Provides in-memory caching and can be used for sessions, queues, or performance optimization.
+Provides an in-memory data store that can be used for:
 
-Docker Compose allows all services to communicate through an internal network while being managed through a single configuration file.
+* Caching
+* Session storage
+* Queues
+* Performance optimization
+
+Docker Compose automatically creates a network so all containers can communicate securely.
 
 ---
 
 # Environment Variables
 
-Database credentials were stored using environment variables instead of hardcoding them into the source code.
+Sensitive configuration values are stored using environment variables.
 
 Example:
 
@@ -185,144 +224,223 @@ POSTGRES_USER=admin
 POSTGRES_PASSWORD=admin123
 ```
 
-This approach improves security and makes configuration easier across different environments.
+### Benefits
+
+* Better security
+* Easier environment management
+* Cleaner codebase
 
 ---
 
 # AWS EC2 Deployment
 
-The application was deployed on an Ubuntu EC2 instance hosted on AWS.
+The application is deployed on an Ubuntu EC2 instance hosted on AWS.
 
-Deployment steps included:
+Deployment process:
 
-1. Launch Ubuntu EC2 instance
+1. Launch Ubuntu EC2 Instance
 2. Install Docker and Docker Compose
-3. Clone project repository
-4. Build and run containers
-5. Configure NGINX reverse proxy
-6. Configure security settings
+3. Clone the GitHub repository
+4. Build Docker containers
+5. Deploy services using Docker Compose
+6. Configure NGINX
+7. Configure firewall and security tools
 
-The application is accessible through the EC2 public IP.
+### Live Application
+
+http://32.192.185.7/
 
 ---
 
 # NGINX Reverse Proxy
 
-Instead of exposing FastAPI directly to the internet, NGINX was configured as a reverse proxy.
+NGINX was configured as a reverse proxy.
 
-Request flow:
+Request Flow:
 
 ```text
-User
-  |
+User Request
+      |
+      v
 NGINX
-  |
-FastAPI
+      |
+      v
+FastAPI Application
 ```
 
-Benefits:
+### Why NGINX?
 
 * Improved security
-* Cleaner architecture
 * SSL support
+* Reverse proxy functionality
 * Better request handling
+* Production-ready architecture
 
-NGINX listens on port 80 and forwards requests to the FastAPI container running on port 8000.
+NGINX listens on port 80 and forwards requests to FastAPI running on port 8000.
 
 ---
 
-# CI/CD with GitHub Actions
+# CI/CD Pipeline
 
-To automate deployments, GitHub Actions was integrated with the project.
+GitHub Actions was used to automate deployment.
 
 Workflow:
 
 ```text
-Code Push
-    |
+Developer Pushes Code
+          |
+          v
+GitHub Repository
+          |
+          v
 GitHub Actions
-    |
-SSH into EC2
-    |
-Update Application
+          |
+          v
+SSH Connection to EC2
+          |
+          v
+docker compose up -d --build
 ```
 
 Whenever code is pushed to the main branch:
 
 * GitHub Actions starts automatically
-* Connects to EC2 through SSH
-* Pulls the latest code
+* Connects to EC2
+* Pulls latest code
 * Rebuilds containers
 * Deploys updated application
 
-This removes the need for manual deployments.
+### Benefits
+
+* Faster deployments
+* Reduced manual work
+* Improved reliability
+* Consistent deployment process
+
+---
+
+# Health Monitoring
+
+The application exposes a dedicated health endpoint.
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+This endpoint can be used by monitoring systems and load balancers to verify application availability.
 
 ---
 
 # Logging Strategy
 
-Application logs are available through Docker.
+Application logs are captured using Docker.
 
-Useful commands:
+### View Application Logs
 
 ```bash
 docker logs fastapi-app
 ```
 
+### View Complete Service Logs
+
 ```bash
 docker compose logs
 ```
 
-Logs help in troubleshooting, debugging, and monitoring application behavior.
+### Purpose
+
+* Debugging
+* Troubleshooting
+* Performance monitoring
+* Operational visibility
 
 ---
 
 # Backup Strategy
 
-PostgreSQL backups can be created using pg_dump.
+Database backups are created using PostgreSQL pg_dump.
 
-Backup command:
+### Create Backup
 
 ```bash
 docker exec fastapi-production-postgres-1 \
 pg_dump -U admin appdb > backup.sql
 ```
 
-Restore command:
+### Restore Backup
 
 ```bash
 psql -U admin appdb < backup.sql
 ```
 
-This ensures that database data can be recovered if needed.
+### Benefits
+
+* Disaster recovery
+* Data protection
+* Business continuity
 
 ---
 
 # Security Measures
 
-### UFW Firewall
+## UFW Firewall
 
-Only required ports were allowed:
+Only required ports are allowed.
 
 ```text
-22  - SSH
-80  - HTTP
-443 - HTTPS
+22   SSH
+80   HTTP
+443  HTTPS
 ```
 
-### Fail2Ban
+Commands used:
 
-Fail2Ban was installed to protect the server from brute-force login attempts by automatically blocking suspicious IP addresses.
+```bash
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw enable
+```
 
-These measures provide a basic but important layer of server security.
+---
+
+## Fail2Ban
+
+Fail2Ban protects the server from brute-force login attempts.
+
+Installation:
+
+```bash
+sudo apt install fail2ban -y
+```
+
+Verification:
+
+```bash
+sudo systemctl status fail2ban
+```
+
+Benefits:
+
+* Automatic IP blocking
+* Protection against SSH attacks
+* Improved server security
 
 ---
 
 # SSL Approach
 
-A custom domain was not available during this project.
+A custom domain was not available during deployment.
 
-If a domain is available, HTTPS can be enabled using:
+If a domain becomes available, HTTPS can be enabled using:
 
 * NGINX
 * Let's Encrypt
@@ -334,26 +452,57 @@ Example:
 sudo certbot --nginx
 ```
 
-This would automatically generate and manage SSL certificates.
+Benefits:
+
+* Encrypted communication
+* Secure data transfer
+* Improved trust and security
 
 ---
 
 # Future Improvements
 
-Some enhancements that can be added in future versions:
+Potential enhancements include:
 
-* Prometheus monitoring
-* Grafana dashboards
-* Cloudflare integration
-* Kubernetes deployment
+* Prometheus Monitoring
+* Grafana Dashboards
+* Kubernetes Deployment
 * Auto Scaling
-* Zero-downtime deployments
-* Blue-Green deployment strategy
+* Load Balancer
+* Zero Downtime Deployments
+
+---
+
+# What I Learned
+
+Through this project, I gained hands-on experience with:
+
+* FastAPI application deployment
+* Docker containerization
+* Docker Compose orchestration
+* PostgreSQL and Redis integration
+* NGINX reverse proxy configuration
+* AWS EC2 server management
+* GitHub Actions CI/CD automation
+* Linux server administration
+* Firewall and security configuration
+* Logging and backup management
 
 ---
 
 # Conclusion
 
-This project demonstrates the complete deployment lifecycle of a backend application using modern DevOps practices. It covers containerization, infrastructure setup, reverse proxy configuration, CI/CD automation, security, logging, and backup management.
+This project demonstrates the complete deployment lifecycle of a backend application using modern DevOps practices.
 
-Through this project, I gained practical experience in deploying and managing applications in a production-like environment using Docker, NGINX, GitHub Actions, and AWS EC2.
+The implementation covers:
+
+* Containerization
+* Infrastructure setup
+* Reverse proxy configuration
+* CI/CD automation
+* Security hardening
+* Logging
+* Backup management
+* Production deployment
+
+The project successfully simulates a real-world deployment workflow and provides a strong foundation for deploying scalable backend applications in production environments.
